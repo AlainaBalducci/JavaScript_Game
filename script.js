@@ -25,8 +25,16 @@ window.addEventListener("load", function () {
       this.dx = 0;
       this.dy = 0;
       this.speedModifier = 5;
+      this.spriteWidth = 255;
+      this.spriteHeight = 255;
+      this.width = this.spriteWidth;
+      this.height = this.spriteHeight;
+      this.spriteX;
+      this.spriteY;
+      this.image = document.getElementById('bull');
     }
     draw(context) {
+     context.drawImage(this.image, 0, 0, this.spriteWidth, this.spriteHeight, this.spriteX, this.spriteY, this.width, this.height);
       context.beginPath();
       context.arc(
         this.collisionX,
@@ -59,9 +67,12 @@ window.addEventListener("load", function () {
       }
       this.collisionX += this.speedX * this.speedModifier;
       this.collisionY += this.speedY * this.speedModifier;
+      this.spriteX = this.collisionX - this.width * 0.5;
+      //use -100 to move collision point to bottom of player sprite
+      this.spriteY = this.collisionY - this.height * 0.5 -100;
       //collision with obstacles
       this.game.obstacles.forEach(obstacle => {
-       //[(distance < sumOfRadii), distance, sumOfRadii, dx, dy]
+       //checkCollision returns [(distance < sumOfRadii), distance, sumOfRadii, dx, dy]
        //destructuring assignment: syntax in JS expression that makes it possible to unpack values from arrays, or properties from objects, into distinct variables. Example: let collision = game.checkCollision(this, obstacle)[0]; etc...
        let [collision, distance, sumOfRadii, dx, dy] = this.game.checkCollision(this, obstacle)
        if (collision) {
