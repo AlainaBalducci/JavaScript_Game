@@ -1,77 +1,111 @@
 // Wait for the window to load before running the code
-window.addEventListener("load", function(){
- // Get the canvas element and its 2D rendering context
- const canvas = document.getElementById('canvas1');
- const ctx = canvas.getContext('2d');
+window.addEventListener("load", function () {
+  // Get the canvas element and its 2D rendering context
+  const canvas = document.getElementById("canvas1");
+  const ctx = canvas.getContext("2d");
 
- // Set the dimensions of the canvas
- canvas.width = 1280;
- canvas.height = 720;
+  // Set the dimensions of the canvas
+  canvas.width = 1280;
+  canvas.height = 720;
 
- //outside methods so these properties only load once
- ctx.fillStyle = 'white';
- ctx.lineWidth = 3;
- ctx.strokeStyle = 'white';
-//this.game does not take a copy of the game object, it points to a space in the memory where the game is stored. Objects in JS are so called reference data types
-//can split classes in to seperate folders to make it more moduler
- class Player {
-  constructor(game) {
+  //outside methods so these properties only load once
+  ctx.fillStyle = "white";
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = "white";
+  //this.game does not take a copy of the game object, it points to a space in the memory where the game is stored. Objects in JS are so called reference data types
+  //can split classes in to seperate folders to make it more moduler
+  class Player {
+    constructor(game) {
       this.game = game; // Store a reference to the game object
       this.collisionX = this.game.width * 0.5;
       this.collisionY = this.game.height * 0.5;
       this.collisionRadius = 30;
+      this.speedX = 0;
+      this.speedY = 0;
+      this.dx = 0;
+      this.dy = 0;
+      this.speedModifier = 20;
+    }
+    draw(context) {
+      context.beginPath();
+      context.arc(
+        this.collisionX,
+        this.collisionY,
+        this.collisionRadius,
+        0,
+        Math.PI * 2
+      ); //create circle
+      context.save(); //Save and restore methods allow us to apply specific drawing settings only to selective shapes, w/o affecting the rest of the canvas drawings
+      context.globalAlpha = 0.5; //use globalalpha property to set opacity of the shapes we are drawing only effects the fill this time.
+      context.fill();
+      context.restore(); //to limit certain canvas settings only specific to draw calls can wrap the drawing code between save() and restore() built in canvas methods
+      context.stroke(); //will not have the opacity set by glabalAlpha
+      context.beginPath();
+      context.moveTo(this.collisionX, this.collisionY);
+      context.lineTo(this.game.mouse.x, this.game.mouse.y);
+      context.stroke();
+    }
+    //using the hypotonuse gives us a constance speed for our player
+    update() {
+      this.dx = this.game.mouse.x - this.collisionX;
+      this.dy = this.game.mouse.y - this.collisionY;
+      const distance = Math.hypot(this.dy, this.dx);
+      if (distance > this.speedModifier) {
+       this.speedX = this.dx / distance || 0;
+       this.speedY = this.dy / distance || 0;
+      } else { 
+       this.speedX = 0;
+       this.speedY = 0;
+      }
+      this.collisionX += this.speedX * this.speedModifier;
+      this.collisionY += this.speedY * this.speedModifier;
+    }
   }
-  draw(context) {
-    context.beginPath();
-    context.arc(this.collisionX, this.collisionY, this.collisionRadius, 0, Math.PI * 2); //create circle
-    context.save(); //Save and restore methods allow us to apply specific drawing settings only to selective shapes, w/o affecting the rest of the canvas drawings
-    context.globalAlpha = 0.5; //use globalalpha property to set opacity of the shapes we are drawing only effects the fill this time.
-    context.fill(); 
-    context.restore(); //to limit certain canvas settings only specific to draw calls can wrap the drawing code between save() and restore() built in canvas methods 
-    context.stroke(); //will not have the opacity set by glabalAlpha
-  }
- }
 
- class Game {
-  constructor(canvas) {
+  class Game {
+    constructor(canvas) {
       this.canvas = canvas;
       this.width = this.canvas.width;
       this.height = this.canvas.height;
       this.player = new Player(this); // Create a player object associated with this game
       this.mouse = {
-       x: this.width * 0.5,
-       y: this.height * 0.5,
-       pressed: false
-      }
+        x: this.width * 0.5,
+        y: this.height * 0.5,
+        pressed: false,
+      };
       //event listener
       //ES6 arrow functions automatically inherit the reference to 'this' keyword from the parent scope. If we used the function() instead, we would get an error that mouse is not defined.
-      canvas.addEventListener('mousedown', (e) => {
-       this.mouse.x = e.offsetX;
-       this.mouse.y = e.offsetY;
-       this.mouse.pressed = true;
+      canvas.addEventListener("mousedown", (e) => {
+        this.mouse.x = e.offsetX;
+        this.mouse.y = e.offsetY;
+        this.mouse.pressed = true;
       });
-      canvas.addEventListener('mouseup', (e) => {
-       this.mouse.x = e.offsetX;
-       this.mouse.y = e.offsetY;
-       this.mouse.pressed = false;
+      canvas.addEventListener("mouseup", (e) => {
+        this.mouse.x = e.offsetX;
+        this.mouse.y = e.offsetY;
+        this.mouse.pressed = false;
       });
-      canvas.addEventListener('mousemove', (e) => {
-       this.mouse.x = e.offsetX;
-       this.mouse.y = e.offsetY;
-       this.mouse.pressed = false;
-       //console.log(this.mouse.x);
+      canvas.addEventListener("mousemove", (e) => {
+        if (this.mouse.pressed) {
+          this.mouse.x = e.offsetX;
+          this.mouse.y = e.offsetY;
+        }
       });
+    }
+    render(context) {
+      this.player.draw(context);
+      this.player.update();
+    }
   }
-  render(context) {
-   this.player.draw(context);
+
+  // Create a new instance of the Game class, passing the canvas
+  const game = new Game(canvas);
+
+  //console.log(game);
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    game.render(ctx);
+    requestAnimationFrame(animate);
   }
- }
-
- // Create a new instance of the Game class, passing the canvas
- const game = new Game(canvas);
- game.render(ctx);
- console.log(game);
- function animate() {
-
- }
+  animate();
 });
