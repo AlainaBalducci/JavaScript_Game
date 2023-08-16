@@ -19,7 +19,7 @@ window.addEventListener("load", function () {
       this.game = game; // Store a reference to the game object
       this.collisionX = this.game.width * 0.5;
       this.collisionY = this.game.height * 0.5;
-      this.collisionRadius = 50;
+      this.collisionRadius = 30;
       this.speedX = 0;
       this.speedY = 0;
       this.dx = 0;
@@ -88,6 +88,18 @@ window.addEventListener("load", function () {
       this.spriteX = this.collisionX - this.width * 0.5;
       //use -100 to move collision point to bottom of player sprite
       this.spriteY = this.collisionY - this.height * 0.5 -100;
+      //horizinatal boundaries
+      if (this.collisionX < this.collisionRadius) {
+       this.collisionX = this.collisionRadius;
+      } else if (this.collisionX > this.game.width - this.collisionRadius) { 
+       this.collisionX = this.game.width - this.collisionRadius;
+      }
+      //vertical boundaries
+      if (this.collisionY < this.game.topMargin + this.collisionRadius) {
+       this.collisionY = this.game.topMargin + this.collisionRadius;
+      } else if (this.collisionY > this.game.height - this.collisionRadius) {
+       this.collisionY = this.game.height - this.collisionRadius;
+      }
       //collision with obstacles
       this.game.obstacles.forEach(obstacle => {
        //checkCollision returns [(distance < sumOfRadii), distance, sumOfRadii, dx, dy]
@@ -210,7 +222,7 @@ window.addEventListener("load", function () {
          overlap = true;
         }
        });
-       const margin = testObstacle.collisionRadius * 2;
+       const margin = testObstacle.collisionRadius * 3;
        if (!overlap && testObstacle.spriteX > 0 && testObstacle.spriteX < this.width - testObstacle.width && testObstacle.collisionY > this.topMargin + margin && testObstacle.collisionY < this.height - margin) {
         this.obstacles.push(testObstacle);
        }
