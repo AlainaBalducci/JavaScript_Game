@@ -19,7 +19,7 @@ window.addEventListener("load", function () {
       this.game = game; // Store a reference to the game object
       this.collisionX = this.game.width * 0.5;
       this.collisionY = this.game.height * 0.5;
-      this.collisionRadius = 30;
+      this.collisionRadius = 50;
       this.speedX = 0;
       this.speedY = 0;
       this.dx = 0;
@@ -37,6 +37,7 @@ window.addEventListener("load", function () {
     }
     draw(context) {
      context.drawImage(this.image, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, this.spriteX, this.spriteY, this.width, this.height);
+     if (this.game.debug) {
       context.beginPath();
       context.arc(
         this.collisionX,
@@ -54,6 +55,8 @@ window.addEventListener("load", function () {
       context.moveTo(this.collisionX, this.collisionY);
       context.lineTo(this.game.mouse.x, this.game.mouse.y);
       context.stroke();
+     }
+      
     }
     //using the hypotonuse gives us a constance speed for our player
     update() {
@@ -110,7 +113,7 @@ window.addEventListener("load", function () {
     this.game = game;
     this.collisionX = Math.random() * this.game.width;
     this.collisionY = Math.random() * this.game.height;
-    this.collisionRadius = 60;
+    this.collisionRadius = 40;
     this.image = document.getElementById('obstacles');
     this.spriteWidth = 250;
     this.spriteHeight = 250;
@@ -123,7 +126,8 @@ window.addEventListener("load", function () {
    }
    draw(context) {
     context.drawImage(this.image, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, this.spriteX, this.spriteY, this.width, this.height);
-    context.beginPath();
+    if (this.game.debug) {
+     context.beginPath();
     context.arc(
       this.collisionX,
       this.collisionY,
@@ -136,6 +140,8 @@ window.addEventListener("load", function () {
     context.fill();
     context.restore(); 
     context.stroke();
+    }
+    
    }
   }
 
@@ -145,6 +151,7 @@ window.addEventListener("load", function () {
       this.width = this.canvas.width;
       this.height = this.canvas.height;
       this.topMargin = 260;
+      this.debug = true;
       this.player = new Player(this); // Create a player object associated with this game
       this.numberOfObstacles = 10;
       this.obstacles = [];
@@ -171,6 +178,9 @@ window.addEventListener("load", function () {
           this.mouse.y = e.offsetY;
         }
       });
+      window.addEventListener("keydown", (e) => {
+       if (e.key == 'd') this.debug = !this.debug;
+     });
     }
     render(context) {
       this.player.draw(context);
