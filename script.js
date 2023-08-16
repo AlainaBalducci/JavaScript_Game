@@ -38,6 +38,29 @@ window.addEventListener("load", function(){
       this.width = this.canvas.width;
       this.height = this.canvas.height;
       this.player = new Player(this); // Create a player object associated with this game
+      this.mouse = {
+       x: this.width * 0.5,
+       y: this.height * 0.5,
+       pressed: false
+      }
+      //event listener
+      //ES6 arrow functions automatically inherit the reference to 'this' keyword from the parent scope. If we used the function() instead, we would get an error that mouse is not defined.
+      canvas.addEventListener('mousedown', (e) => {
+       this.mouse.x = e.offsetX;
+       this.mouse.y = e.offsetY;
+       this.mouse.pressed = true;
+      });
+      canvas.addEventListener('mouseup', (e) => {
+       this.mouse.x = e.offsetX;
+       this.mouse.y = e.offsetY;
+       this.mouse.pressed = false;
+      });
+      canvas.addEventListener('mousemove', (e) => {
+       this.mouse.x = e.offsetX;
+       this.mouse.y = e.offsetY;
+       this.mouse.pressed = false;
+       //console.log(this.mouse.x);
+      });
   }
   render(context) {
    this.player.draw(context);
