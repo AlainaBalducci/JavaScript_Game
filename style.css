@@ -19,4 +19,9 @@
  transform: translate(-50%, -50%);
  pointer-events: none; 
 } 
+
+#obstacles {
+ display: none;
+}
+
 /* set pointer-events to none on overlay image to make sure it doesn't interfere with mouse events on canvas */
