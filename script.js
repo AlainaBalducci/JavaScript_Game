@@ -314,7 +314,7 @@ window.addEventListener("load", function () {
       if (this.collisionY < this.game.topMargin) {
         this.markedForDeletion = true;
         this.game.removeGameObjects();
-        this.game.score++;
+       if(!this.game.gameOver) this.game.score++;
         for (let i = 0; i < 3; i++) {
           this.game.particles.push(
             new Firefly(this.game, this.collisionX, this.collisionY, "yellow")
@@ -401,7 +401,7 @@ window.addEventListener("load", function () {
       this.spriteX = this.collisionX - this.width * 0.5;
       this.spriteY = this.collisionY - this.height + 40;
       this.collisionX -= this.speedX;
-      if (this.spriteX + this.width < 0) {
+      if (this.spriteX + this.width < 0 && !this.game.gameOver) {
         this.collisionX =
           this.game.width + this.width + Math.random() * this.game.width * 0.5;
         this.collisionY =
@@ -501,6 +501,8 @@ window.addEventListener("load", function () {
       this.hatchlings = [];
       this.gameObjects = [];
       this.score = 0;
+      this.winningScore = 5;
+      this.gameOver = false;
       this.lostHatchlings = 0;
       this.particles = [];
       this.mouse = {
@@ -557,7 +559,7 @@ window.addEventListener("load", function () {
       this.timer += deltaTime;
 
       //add eggs periodically
-      if (this.eggTimer > this.eggInterval && this.eggs.length < this.maxEggs) {
+      if (this.eggTimer > this.eggInterval && this.eggs.length < this.maxEggs && !this.gameOver) {
         this.addEgg();
         this.eggTimer = 0;
         console.log(this.eggs);
@@ -573,6 +575,32 @@ window.addEventListener("load", function () {
         context.fillText("Lost: " + this.lostHatchlings, 25, 100);
       }
       context.restore();
+      //win or lose message
+      if (this.score >= this.winningScore) {
+       this.gameOver = true;
+       context.save();
+       context.fillStyle = 'rgba(0,0,0,0.5)';
+       context.fillRect(0, 0, this.width, this.height);
+       context.fillStyle = 'white';
+       context.textAlign = 'center';
+       let message1;
+       let message2;
+       if (this.lostHatchlings <= 5) {
+        //win
+        message1 = "Bullseye!!!"
+        message2 = "You bullied the bullies!!!"
+       } else {
+        //lose
+        message1 = "Crap!!!"
+        message2 = "You lost!!!" + this.lostHatchlings + " hatchlings, don't be a pushover!!!";
+       }
+       context.font = '130px Helvetica';
+       context.fillText(message1, this.width * 0.5, this.height * 0.5 - 20);
+       context.font = '40px Helvetica';
+       context.fillText(message2, this.width * 0.5, this.height * 0.5 + 30);
+       context.fillText("Final score " + this.score + ". press 'R' to butt heads again!", this.width * 0.5, this.height * 0.5 + 80);
+       context.restore();
+      }
     }
     checkCollision(a, b) {
       const dx = a.collisionX - b.collisionX;
@@ -645,7 +673,7 @@ window.addEventListener("load", function () {
     const deltaTime = timeStamp - lastTime;
     lastTime = timeStamp;
     game.render(ctx, deltaTime);
-    requestAnimationFrame(animate);
+   requestAnimationFrame(animate);
   }
   animate(0);
 });
