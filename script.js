@@ -12,6 +12,8 @@ window.addEventListener("load", function () {
   ctx.fillStyle = "white";
   ctx.lineWidth = 3;
   ctx.strokeStyle = "white";
+  ctx.font = '40px Helvetica';
+  ctx.textAlign = 'center';
   //this.game does not take a copy of the game object, it points to a space in the memory where the game is stored. Objects in JS are so called reference data types
   //can split classes in to seperate folders to make it more moduler
   class Player {
@@ -175,6 +177,9 @@ window.addEventListener("load", function () {
     this.height = this.spriteHeight;
     this.spriteX;
     this.spriteY;
+    this.hatchTimer = 0;
+    this.hatchInterval = 3000;
+    this.markedForDeletion = false;
    }
    draw (context) {
     context.drawImage(this.image, this.spriteX, this.spriteY);
@@ -192,13 +197,16 @@ window.addEventListener("load", function () {
     context.fill();
     context.restore(); 
     context.stroke();
+    const displayTimer = (this.hatchTimer * 0.001).toFixed(0);
+    context.fillText(displayTimer, this.collisionX, this.collisionY - this.collisionRadius * 2.5);
     }
    }
    //spread operator allows us to quickly expand elements in an array into another array
-   update() {
+   update(deltaTime) {
     this.spriteX = this.collisionX - this.width * 0.5;
     this.spriteY = this.collisionY - this.height * 0.5 - 30;
     //added enemies so now they can push the eggs around
+    //collisions
     let collisionObjects = [this.game.player, ...this.game.obstacles, ...this.game.enemies];
     collisionObjects.forEach(object => {
      let [collision, distance, sumOfRadii, dx, dy] = this.game.checkCollision(this, object);
@@ -209,6 +217,14 @@ window.addEventListener("load", function () {
       this.collisionY = object.collisionY + (sumOfRadii + 1) * unit_y;
      }
     });
+    //hatching
+    if (this.hatchTimer > this.hatchInterval) {
+     this.game.hatchlings.push(new Larva(this.game, this.collisionX, this.collisionY));
+     this.markedForDeletion = true;
+     this.game.removeGameObjects();
+    } else {
+     this.hatchTimer += deltaTime;
+    }
    }
   }
 
@@ -228,27 +244,32 @@ window.addEventListener("load", function () {
     this.speedY = 1 + Math.random();
    }
    draw(context) {
-    context.drawImage(this.image, this.spriteX, this.spriteY);
-    // if (this.game.debug) {
-    //  context.beginPath();
-    // context.arc(
-    //   this.collisionX,
-    //   this.collisionY,
-    //   this.collisionRadius,
-    //   0,
-    //   Math.PI * 2
-    // ); 
-    // context.save();
-    // context.globalAlpha = 0.5; 
-    // context.fill();
-    // context.restore(); 
-    // context.stroke();
-    // }
+    context.drawImage(this.image, 0, 0, this.spriteWidth, this.spriteHeight, this.spriteX, this.spriteY, this.width, this.height);
+    if (this.game.debug) {
+     context.beginPath();
+    context.arc(
+      this.collisionX,
+      this.collisionY,
+      this.collisionRadius,
+      0,
+      Math.PI * 2
+    ); 
+    context.save();
+    context.globalAlpha = 0.5; 
+    context.fill();
+    context.restore(); 
+    context.stroke();
+    }
    }
    update() {
     this.collisionY -= this.speedY;
     this.spriteX = this.collisionX - this.width * 0.5;
-    this.spriteY = this.collisionY - this.height * 0.5;
+    this.spriteY = this.collisionY - this.height * 0.5 - 50;
+    //check if the move to safety
+    if (this.collisionY < this.game.topMargin) {
+     this.markedForDeletion = true;
+     this.game.removeGameObjects();
+    }
    }
   }
 
@@ -324,6 +345,7 @@ window.addEventListener("load", function () {
       this.obstacles = [];
       this.eggs = [];
       this.enemies = [];
+      this.hatchlings = [];
       this.gameObjects = [];
       this.mouse = {
         x: this.width * 0.5,
@@ -356,7 +378,7 @@ window.addEventListener("load", function () {
      if (this.timer > this.interval) {
       //animate next frame
       context.clearRect(0, 0, this.width, this.height)
-      this.gameObjects = [this.player, ...this.eggs, ...this.obstacles, ...this.enemies];
+      this.gameObjects = [this.player, ...this.eggs, ...this.obstacles, ...this.enemies, ...this.hatchlings];
        //sort by vertical position with optional argument
        this.gameObjects.sort((a, b) => {
         return a.collisionY - b.collisionY;
@@ -364,7 +386,7 @@ window.addEventListener("load", function () {
       //calling draw() and update() on all gameObjects, so player 1st, eggs 2nd, obstacles 3rd. sort method used above to fix this
       this.gameObjects.forEach(object => {
        object.draw(context);
-       object.update();
+       object.update(deltaTime);
       });
      
       this.timer = 0;
@@ -394,6 +416,10 @@ window.addEventListener("load", function () {
     }
     addEnemy() {
      this.enemies.push(new Enemy(this));
+    }
+    removeGameObjects() {
+     this.eggs = this.eggs.filter(object => !object.markedForDeletion);
+     this.hatchlings = this.hatchlings.filter(object => !object.markedForDeletion);
     }
     //circle packing (brute force algorithm)
     init() {
