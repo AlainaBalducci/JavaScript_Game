@@ -585,7 +585,7 @@ window.addEventListener("load", function () {
       }
       context.restore();
       //win or lose message
-      if (this.score >= this.winningScore) {
+      if (this.score >= this.winningScore || this.lostHatchlings > 5) {
        this.gameOver = true;
        context.save();
        context.fillStyle = 'rgba(0,0,0,0.5)';
